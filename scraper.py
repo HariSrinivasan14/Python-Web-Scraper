@@ -1,5 +1,4 @@
 import requests
-#from requests_html import HTMLSession
 from bs4 import BeautifulSoup
 import pandas as pd
 
@@ -156,7 +155,6 @@ def mergeStats(playerStats, advancedStats):
                 playerStats["Fouls per Game"].append(advancedStats[key])    
         else:
             # "PTS" case
-            #print(key)
             if advancedStats[key] == None:
                 playerStats["Points per Game"].append('-')
             else:
@@ -171,7 +169,7 @@ def parsePlayerPages(pageList, fileType):
     
     header = True
     counter = 0
-    numRows = 1
+    numRows = 1 # starts at 1 to account for the header
     for page in pageList:  
         soup = BeautifulSoup(page.content,"html5lib")
         table = soup.find("table", class_= "sortable")
@@ -250,14 +248,8 @@ def getAdvancedPlayerStats(playerAdvancedPageLink):
         counter += 1
     return advancedStats
 
-def getPlayerAwards():
-    return
-
-
-
 def getPlayers(fileType):
     replyList = []
-    #abcdefghijklmnpqrstuvwxyz
     for char in "abcdefghijklmnpqrstuvwxyz":
         reply = requests.get("https://www.basketball-reference.com/players/" + char)
         replyList.append(reply)
