@@ -253,7 +253,60 @@ def getPlayers(fileType):
     for char in "abcdefghijklmnpqrstuvwxyz":
         reply = requests.get("https://www.basketball-reference.com/players/" + char)
         replyList.append(reply)
-    return parsePlayerPages(replyList, fileType)
+    parsePlayerPages(replyList, fileType)
+
+
+def parseTeamPage(reply, fileType):
+    teamStats = {"Franchise":[],"League":[],"First Year":[],"Last Year":[], "Years Active":[],"Games Played":[], 
+    "Wins": [], "Losses": [], "Win/Loss Percentage":[], "Number of Playoff Appearances": [], 
+    "Division Championships": [], "Conference Championships":[], "Championships Won":[]}
+    
+    soup = BeautifulSoup(reply.content,"html5lib")
+    table = soup.find("table", id= "teams_active")
+    rows = table.tbody.find_all('tr')
+    for row in rows:
+        teamName = row.findAll("th")[0]
+        teamNameFiltered = teamName.find(text=True)
+
+        try:
+            teamAdvancedPageLink = teamName.find('a', href=True)['href']
+        except:
+            teamAdvancedPageLink = None
+        if teamAdvancedPageLink != None:
+            continue
+
+        teamStats["Franchise"].append(teamNameFiltered)
+        teamDetails = row.findAll("td")
+
+        teamStats["League"].append(teamDetails[0].find(text=True))
+        teamStats["First Year"].append(teamDetails[1].find(text=True))
+        teamStats["Last Year"].append(teamDetails[2].find(text=True))
+        teamStats["Years Active"].append(convertString(teamDetails[3].find(text=True)))
+        teamStats["Games Played"].append(convertString(teamDetails[4].find(text=True)))
+        teamStats["Wins"].append(convertString(teamDetails[5].find(text=True)))
+        teamStats["Losses"].append(convertString(teamDetails[6].find(text=True)))
+        teamStats["Win/Loss Percentage"].append(convertString(teamDetails[7].find(text=True)))
+        teamStats["Number of Playoff Appearances"].append(convertString(teamDetails[8].find(text=True)))
+        teamStats["Division Championships"].append(convertString(teamDetails[9].find(text=True)))
+        teamStats["Conference Championships"].append(convertString(teamDetails[10].find(text=True)))
+        teamStats["Championships Won"].append(convertString(teamDetails[11].find(text=True)))
+
+    # write to file
+    dataFrame=pd.DataFrame(teamStats)
+    print(dataFrame)
+    if fileType == "C":
+        writeToCSVFile(dataFrame, True, "teamData.csv")
+    else:
+        writeToExcelFile(dataFrame, True, "teams","data.xlsx", 0)
+
+
+
+
+def getTeams(fileType):
+    reply = requests.get("https://www.basketball-reference.com/teams/")
+    parseTeamPage(reply, fileType)
+
+
 
 def Main():
     print("Please type C to export the data to csv files or type E to export the data to an excel file")
@@ -264,5 +317,6 @@ def Main():
         print("--------------------------------")
         fileType = input("Enter File Type: ")
     getPlayers(fileType)
+    getTeams(fileType)
 
 Main()
